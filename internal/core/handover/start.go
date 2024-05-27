@@ -2,14 +2,25 @@ package handover
 
 import (
 	"fmt"
-	"strings"
+	"slices"
 
 	"github.com/fehlhabers/st/internal/core/git"
 )
 
-const (
-	activeSesssionPrefix = "st"
+var (
+	mainBranches = []string{
+		"main",
+		"master",
+	}
 )
+
+func JoinSession(sessionName string) {
+	_, err := git.Pull()
+	if err != nil {
+		fmt.Printf("Failed to join stream!\n%s\n", err)
+		return
+	}
+}
 
 func CreateSession(sessionName string) {
 	branch, err := git.CurrentBranch()
@@ -18,15 +29,14 @@ func CreateSession(sessionName string) {
 		return
 	}
 
-	if branch != "master" && branch != "main" {
+	if slices.Contains(mainBranches, branch) {
 		fmt.Println("Warning! It is recommended to use Stream Team from the trunk")
 	}
 	createSession(sessionName)
 }
 
 func createSession(sessionName string) {
-	session := fmt.Sprintf("%s/%s", activeSesssionPrefix, sessionName)
-	if _, err := git.CreateBranch(session); err != nil {
+	if _, err := git.CreateBranch(sessionName); err != nil {
 		fmt.Printf("Failed to start handover!\n%s\n", err)
 		return
 	}
@@ -62,13 +72,9 @@ func isActiveSession() bool {
 		return false
 	}
 
-	branchParts := strings.Split(branch, "/")
-	if len(branchParts) < 2 {
+	if branch == "master" || branch == "main" {
 		return false
 	}
 
-	if branchParts[0] == activeSesssionPrefix {
-		return true
-	}
-	return false
+	return true
 }
