@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/fehlhabers/st/internal/core/git"
+	"github.com/charmbracelet/log"
+	"github.com/fehlhabers/zt/internal/core/git"
 )
 
 var (
@@ -14,15 +15,15 @@ var (
 	}
 )
 
-func JoinSession(sessionName string) {
+func JoinZtream(ztreamName string) {
 	_, err := git.Pull()
 	if err != nil {
-		fmt.Printf("Failed to join stream!\n%s\n", err)
+		log.Warn("Failed to join stream!\n%s\n", err)
 		return
 	}
 }
 
-func CreateSession(sessionName string) {
+func CreateZtream(ztreamName string) {
 	branch, err := git.CurrentBranch()
 	if err != nil {
 		fmt.Printf("Failed to start handover!\n%s\n", err)
@@ -30,43 +31,39 @@ func CreateSession(sessionName string) {
 	}
 
 	if slices.Contains(mainBranches, branch) {
-		fmt.Println("Warning! It is recommended to use Stream Team from the trunk")
+		log.Warn("It is recommended to use Stream Team from the trunk")
 	}
-	createSession(sessionName)
-}
-
-func createSession(sessionName string) {
-	if _, err := git.CreateBranch(sessionName); err != nil {
+	if _, err := git.CreateBranch(ztreamName); err != nil {
 		fmt.Printf("Failed to start handover!\n%s\n", err)
 		return
 	}
 }
 
 func Next() {
-	if isActiveSession() {
-		fmt.Println("Handing over...")
+	if isActiveZtream() {
+		log.Info("Handing over...")
 		git.AddAll()
 		git.Commit("Stream Team - Next")
 		git.Push()
-		fmt.Println("Handover done!")
+		log.Info("Handover done!")
 	} else {
-		fmt.Println("No active session found! Make sure you are in the right branch")
+		log.Error("No active ztream found! Make sure you are in the right branch")
 	}
 }
 
 func Start() {
-	if isActiveSession() {
-		fmt.Println("Starting session...")
+	if isActiveZtream() {
+		log.Info("Starting ztream...")
 		if _, err := git.Pull(); err != nil {
 			fmt.Printf("Failed to start handover!\n%s\n", err)
 			return
 		}
 	} else {
-		fmt.Println("No active session found! Create a session before starting")
+		log.Error("No active ztream found! Create a ztream before starting")
 	}
 }
 
-func isActiveSession() bool {
+func isActiveZtream() bool {
 	branch, err := git.CurrentBranch()
 	if err != nil {
 		return false
