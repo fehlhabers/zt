@@ -1,4 +1,4 @@
-module github.com/fehlhabers/st
+module github.com/fehlhabers/zt
 
 go 1.21.3
 

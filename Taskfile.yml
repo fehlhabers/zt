@@ -3,11 +3,11 @@ version: '3'
 tasks:
   run:
     cmds:
-      - go run ./cmd/st
+      - go run ./cmd/zt
 
   build:
     cmds:
-      - go build -o bin/st ./cmd/st
+      - go build -o bin/zt ./cmd/zt
 
   test:
     cmds:
