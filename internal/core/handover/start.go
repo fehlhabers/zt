@@ -1,7 +1,6 @@
 package handover
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/charmbracelet/log"
@@ -16,9 +15,21 @@ var (
 )
 
 func JoinZtream(ztreamName string) {
-	_, err := git.Pull()
+	_, err := git.Fetch()
 	if err != nil {
-		log.Warn("Failed to join stream!\n%s\n", err)
+		log.Warn("Failed updating from remote", "error", err)
+		return
+	}
+
+	_, err = git.SwitchBranch(ztreamName)
+	if err != nil {
+		log.Warn("Could not join Ztream. Does it exist?", "error", err)
+		return
+	}
+
+	_, err = git.Pull()
+	if err != nil {
+		log.Warn("Unable to pull latest changes from remote", "error", err)
 		return
 	}
 }
@@ -26,15 +37,15 @@ func JoinZtream(ztreamName string) {
 func CreateZtream(ztreamName string) {
 	branch, err := git.CurrentBranch()
 	if err != nil {
-		fmt.Printf("Failed to start handover!\n%s\n", err)
+		log.Error("Failed to start handover!", "error", err)
 		return
 	}
 
 	if slices.Contains(mainBranches, branch) {
-		log.Warn("It is recommended to use Stream Team from the trunk")
+		log.Warn("It is recommended to start a ztream from main/master")
 	}
 	if _, err := git.CreateBranch(ztreamName); err != nil {
-		fmt.Printf("Failed to start handover!\n%s\n", err)
+		log.Error("Failed to start handover!", "error", err)
 		return
 	}
 }
@@ -43,7 +54,7 @@ func Next() {
 	if isActiveZtream() {
 		log.Info("Handing over...")
 		git.AddAll()
-		git.Commit("Stream Team - Next")
+		git.Commit("zt handover")
 		git.Push()
 		log.Info("Handover done!")
 	} else {
@@ -55,7 +66,7 @@ func Start() {
 	if isActiveZtream() {
 		log.Info("Starting ztream...")
 		if _, err := git.Pull(); err != nil {
-			fmt.Printf("Failed to start handover!\n%s\n", err)
+			log.Error("Failed to start handover!", "error", err)
 			return
 		}
 	} else {

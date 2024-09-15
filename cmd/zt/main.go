@@ -9,6 +9,7 @@ import (
 
 func main() {
 	log.SetReportTimestamp(false)
+
 	err := cmd.NewRoot().Execute()
 	if err != nil {
 		os.Exit(1)
