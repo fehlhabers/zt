@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/fehlhabers/zt/internal/adapter/git"
 	"github.com/fehlhabers/zt/internal/adapter/state"
+	"github.com/fehlhabers/zt/internal/adapter/timer"
 	"github.com/fehlhabers/zt/internal/errors"
 	"github.com/fehlhabers/zt/internal/model"
 )
@@ -104,6 +105,9 @@ func Start() {
 			log.Error("Failed to start handover!", "error", err)
 			return
 		}
+		zt, _ := state.Storer.GetActiveZtream()
+		team, _ := state.Storer.GetActiveTeam()
+		timer.SetTimer(zt, *team)
 	} else {
 		log.Error("No active ztream found! Create a ztream before starting")
 	}
