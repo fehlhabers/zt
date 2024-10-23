@@ -26,6 +26,10 @@ func CurrentBranch() (string, error) {
 	return git("branch", "--show-current")
 }
 
+func Fetch() (stdout string, err error) {
+	return git("fetch", "--all")
+}
+
 func Pull() (stdout string, err error) {
 	return git("pull")
 }
