@@ -62,17 +62,17 @@ func (z *ZtreamStorer) GetActiveTeam() (*model.Team, error) {
 		SELECT z.* FROM teams z JOIN active_team USING (name)
 		`
 	)
-	teams := []*model.Team{}
-	if err := z.db.Select(teams, selectActiveTeam); err != nil {
+	teams := []model.Team{}
+	if err := z.db.Select(&teams, selectActiveTeam); err != nil {
 		return nil, err
 	}
 
-	return teams[0], nil
+	return &teams[0], nil
 }
 
 func (z *ZtreamStorer) GetTeam(name string) (*model.Team, error) {
 	team := &model.Team{}
-	if err := z.db.Get(&team, "SELECT * FROM teams WHERE name = $1", name); err != nil {
+	if err := z.db.Get(team, "SELECT * FROM teams WHERE name = $1", name); err != nil {
 		return nil, err
 	}
 

@@ -15,7 +15,7 @@ func NewCreate() *cobra.Command {
 		Short: "Create a new ztream",
 		Long:  `Prepare a new ztream `,
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info("Creating session...")
+			log.Info("Creating ztream...")
 			handover.CreateZtream(args[0])
 		},
 	}

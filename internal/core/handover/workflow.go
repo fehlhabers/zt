@@ -42,7 +42,7 @@ func JoinZtream(ztreamName string) {
 func CreateZtream(ztreamName string) {
 	team, err := state.Storer.GetActiveTeam()
 	if err != nil {
-		log.Fatal(errors.GuiTeamNotSet)
+		log.Fatal(errors.GuiTeamNotSet, "error", err)
 	}
 
 	branch, err := git.CurrentBranch()
@@ -81,7 +81,8 @@ func CreateZtream(ztreamName string) {
 
 	untilEnd := time.Unix(curZt.Ends, 0).Sub(time.Now())
 	minsUntil := math.Trunc(untilEnd.Minutes())
-	log.Info("Started ztream", "name", curZt.Name, "mins left", minsUntil)
+
+	log.Info("Started ztream!", "ztream", curZt.Name, "mins left", minsUntil)
 }
 
 func Next() {
