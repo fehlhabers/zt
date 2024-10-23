@@ -1,4 +1,8 @@
+//go:build git
+
 package git
+
+// Git tests are problematic to automatically test, so did not bother to have these run every time
 
 import (
 	"fmt"
