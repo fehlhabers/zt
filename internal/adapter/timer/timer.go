@@ -45,12 +45,14 @@ func SetTimer(zt model.Ztream, team model.Team) error {
 
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode != http.StatusAccepted {
 		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			log.Warn("Timer service responded with non-OK", "status", res.Status)
+			return nil
 		}
 		log.Warn("Timer service responded with non-OK", "status", res.Status, "message", string(body))
+		return nil
 	}
 
 	log.Infof("Started timer at %s", timerRoomUrl)
