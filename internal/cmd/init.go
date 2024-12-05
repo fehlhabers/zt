@@ -1,17 +1,19 @@
-package team
+/*
+Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+*/
+package cmd
 
 import (
 	"github.com/fehlhabers/zt/internal/core/team"
 	"github.com/spf13/cobra"
 )
 
-func NewConfigure() *cobra.Command {
+func NewInit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "configure",
-		Short: "Configure a team",
-		Long:  `Configure a new team with setting using a wizard`,
+		Use:   "init",
+		Short: "Initial config",
+		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			team.Configure()
 		},
 	}

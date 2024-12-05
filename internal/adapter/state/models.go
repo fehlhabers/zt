@@ -1,6 +1,4 @@
-package model
-
-import "time"
+package state
 
 const CreateActivesTable = `
 	CREATE TABLE IF NOT EXISTS actives (
@@ -39,13 +37,4 @@ type Ztream struct {
 	Started int64  `db:"started"`
 	Ends    int64  `db:"ends"`
 	Team    string `db:"team"`
-}
-
-func (z *Ztream) StartSession(sessionMins int) {
-	startTime := time.Now()
-	endTime := startTime.Add(time.Duration(sessionMins))
-
-	_ = endTime
-	z.Started = startTime.Unix()
-	z.Ends = endTime.Unix()
 }
