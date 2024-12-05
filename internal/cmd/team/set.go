@@ -2,8 +2,6 @@ package team
 
 import (
 	"github.com/charmbracelet/log"
-	"github.com/fehlhabers/zt/internal/adapter/state"
-	"github.com/fehlhabers/zt/internal/model"
 	"github.com/spf13/cobra"
 )
 
@@ -18,8 +16,6 @@ func NewSet() *cobra.Command {
 				log.Fatal("Command requires 'team' to be included as argument")
 			}
 
-			zt := model.Team{Name: args[0]}
-			state.Storer.CreateTeam(zt)
 		},
 	}
 

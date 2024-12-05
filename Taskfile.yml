@@ -6,9 +6,13 @@ tasks:
       - go run ./cmd/zt
 
   build:
+    aliases:
+      - b
     cmds:
       - go build -o bin/zt ./cmd/zt
 
   test:
+    aliases:
+      - t
     cmds:
       - go test -v ./...

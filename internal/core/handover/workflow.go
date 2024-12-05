@@ -2,13 +2,12 @@ package handover
 
 import (
 	"math"
-	"slices"
 	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/fehlhabers/zt/internal/adapter/git"
 	"github.com/fehlhabers/zt/internal/adapter/state"
-	"github.com/fehlhabers/zt/internal/errors"
+	"github.com/fehlhabers/zt/internal/core/config"
 	"github.com/fehlhabers/zt/internal/model"
 )
 
@@ -19,39 +18,25 @@ var (
 	}
 )
 
-func JoinZtream(ztreamName string) {
-	_, err := git.Fetch()
-	if err != nil {
-		log.Warn("Failed updating from remote", "error", err)
-		return
-	}
-
-	_, err = git.SwitchBranch(ztreamName)
-	if err != nil {
-		log.Warn("Could not join Ztream. Does it exist?", "error", err)
-		return
-	}
-
-	_, err = git.Pull()
-	if err != nil {
-		log.Warn("Unable to pull latest changes from remote", "error", err)
-		return
-	}
-}
-
 func CreateZtream(ztreamName string) {
-	team, err := state.Storer.GetActiveTeam()
+	cfg, err := config.ZtConfig()
 	if err != nil {
-		log.Fatal(errors.GuiTeamNotSet)
+		log.Error("Failed to create ztream!", "error", err)
+	}
+
+	teamName, teamCfg, err := cfg.ActiveTeamConfig()
+	if err != nil {
+		log.Error("Failed to create ztream!", "error", err)
+		return
 	}
 
 	branch, err := git.CurrentBranch()
 	if err != nil {
-		log.Error("Failed to start handover!", "error", err)
+		log.Error("Failed to create ztream!", "error", err)
 		return
 	}
 
-	if slices.Contains(mainBranches, branch) {
+	if teamCfg.MainBranch == branch {
 		log.Warn("It is recommended to start a ztream from main/master")
 	}
 
@@ -60,8 +45,8 @@ func CreateZtream(ztreamName string) {
 	zt := model.Ztream{
 		Name:    ztreamName,
 		Started: now,
-		Ends:    now + 60*15,
-		Team:    team.Name,
+		Ends:    now + int64(teamCfg.SessionDurMins*60),
+		Team:    teamName,
 	}
 
 	if err := state.Storer.StoreZtream(zt); err != nil {
@@ -82,6 +67,26 @@ func CreateZtream(ztreamName string) {
 	untilEnd := time.Unix(curZt.Ends, 0).Sub(time.Now())
 	minsUntil := math.Trunc(untilEnd.Minutes())
 	log.Info("Started ztream", "name", curZt.Name, "mins left", minsUntil)
+}
+
+func JoinZtream(ztreamName string) {
+	_, err := git.Fetch()
+	if err != nil {
+		log.Warn("Failed updating from remote", "error", err)
+		return
+	}
+
+	_, err = git.SwitchBranch(ztreamName)
+	if err != nil {
+		log.Warn("Could not join Ztream. Does it exist?", "error", err)
+		return
+	}
+
+	_, err = git.Pull()
+	if err != nil {
+		log.Warn("Unable to pull latest changes from remote", "error", err)
+		return
+	}
 }
 
 func Next() {
@@ -111,6 +116,11 @@ func Start() {
 func isActiveZtream() bool {
 	branch, err := git.CurrentBranch()
 	if err != nil {
+		return false
+	}
+
+	if ztream, err := state.Storer.GetActiveZtream(); err != nil || ztream.Name != branch {
+		log.Error("Join the ztream before starting.", "branch", branch, "active ztream", ztream.Name)
 		return false
 	}
 

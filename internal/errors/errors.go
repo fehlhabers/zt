@@ -1,5 +1,9 @@
 package errors
 
+import "errors"
+
 var (
-	GuiTeamNotSet = "Team has not been set. Set by running 'zt team set myteam'"
+	TeamNotFound    = errors.New("team does not exist")
+	NoTeamSet       = errors.New("no team has been configured")
+	NoZtConfigFound = errors.New("no zt configuration found")
 )

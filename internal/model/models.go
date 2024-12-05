@@ -1,23 +1,9 @@
 package model
 
-const CreateTeamsTable = `	
-	CREATE TABLE IF NOT EXISTS teams (
-		name text PRIMARY KEY
-	)`
-
-type Team struct {
-	Name string `db:"name"`
-}
-
-const CreateActiveTeamTable = `
-	CREATE TABLE IF NOT EXISTS active_team (
-		only integer PRIMARY KEY,
-	    name text REFERENCES teams
-	)`
-const CreateActiveZtreamTable = `
-	CREATE TABLE IF NOT EXISTS active_ztream (
-		only integer PRIMARY KEY,
-	    name text REFERENCES ztreams
+const CreateActivesTable = `
+	CREATE TABLE IF NOT EXISTS actives (
+		type text PRIMARY KEY,
+	    reference text REFERENCES ztreams
 	)`
 
 const CreateZtreamsTable = `

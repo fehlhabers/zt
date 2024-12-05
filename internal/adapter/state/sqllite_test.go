@@ -24,53 +24,6 @@ func TestNewZtreamStorer(t *testing.T) {
 	})
 }
 
-func TestCreateTeam(t *testing.T) {
-	clearDb()
-	sut := NewZtreamStorer(dbPath)
-
-	t.Run("setup new team", func(t *testing.T) {
-
-		var (
-			teamName = "test1"
-			team     = model.Team{
-				Name: teamName,
-			}
-		)
-
-		err := sut.CreateTeam(team)
-		assert.NoError(t, err)
-
-		got, err := sut.GetTeam(teamName)
-		assert.NoError(t, err)
-		assert.Equal(t, teamName, got.Name)
-
-		got, err = sut.GetActiveTeam()
-		assert.NoError(t, err)
-		assert.Equal(t, teamName, got.Name)
-	})
-
-	t.Run("create another team. becomes active on creation", func(t *testing.T) {
-
-		var (
-			teamName = "test2"
-			team     = model.Team{
-				Name: teamName,
-			}
-		)
-
-		err := sut.CreateTeam(team)
-		assert.NoError(t, err)
-
-		got, err := sut.GetTeam(teamName)
-		assert.NoError(t, err)
-		assert.Equal(t, teamName, got.Name)
-
-		got, err = sut.GetActiveTeam()
-		assert.NoError(t, err)
-		assert.Equal(t, teamName, got.Name)
-	})
-}
-
 func TestZtream(t *testing.T) {
 	clearDb()
 	sut := NewZtreamStorer(dbPath)
