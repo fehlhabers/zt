@@ -4,12 +4,11 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/fehlhabers/zt/internal/adapter/state"
 	"github.com/fehlhabers/zt/internal/cmd/team"
 	"github.com/spf13/cobra"
 )
 
-func NewRoot(storer *state.ZtreamStorer) *cobra.Command {
+func NewRoot() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zt",
 		Short: "Create Ztreams in your team!",
@@ -17,8 +16,6 @@ func NewRoot(storer *state.ZtreamStorer) *cobra.Command {
 Create, join, switch to next and close ztreams. Your team can work in multiple parallel ztreams
 by leveraging different git branches`,
 	}
-
-	state.Storer = storer
 
 	cmd.AddCommand(NewStart())
 	cmd.AddCommand(NewJoin())
