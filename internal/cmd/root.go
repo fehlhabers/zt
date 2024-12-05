@@ -17,6 +17,7 @@ Create, join, switch to next and close ztreams. Your team can work in multiple p
 by leveraging different git branches`,
 	}
 
+	cmd.AddCommand(NewList())
 	cmd.AddCommand(NewStart())
 	cmd.AddCommand(NewJoin())
 	cmd.AddCommand(NewNext())

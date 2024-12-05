@@ -1,7 +1,12 @@
 package admin
 
-import "github.com/fehlhabers/zt/internal/adapter/state"
+import (
+	"github.com/charmbracelet/log"
+	"github.com/fehlhabers/zt/internal/adapter/state"
+)
 
 func ListZtreams() {
-	state.Storer.GetActiveZtream()
+	for _, z := range state.Storer.GetAllZtreams() {
+		log.Info("Ztream", "name", z.Name)
+	}
 }

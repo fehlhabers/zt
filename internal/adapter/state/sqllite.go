@@ -48,11 +48,37 @@ func NewZtreamStorer(dbPath string) *ZtreamStorer {
 	return &ZtreamStorer{db: db}
 }
 
+func (z *ZtreamStorer) GetAllZtreams() []model.Ztream {
+	var (
+		selectAllZtreams = `
+		SELECT z.* FROM ztreams z
+		`
+	)
+	rows, err := z.db.Query(selectAllZtreams)
+	if err != nil {
+		return nil
+	}
+
+	var ztreams []model.Ztream
+	for rows.Next() {
+		var z model.Ztream
+
+		err := rows.Scan(&z.Name, &z.Started, &z.Ends, &z.Team)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ztreams = append(ztreams, z)
+	}
+
+	return ztreams
+}
+
 func (z *ZtreamStorer) GetActiveZtream() (model.Ztream, error) {
 	var zt model.Ztream
 	var (
 		selectActiveZtream = `
-		SELECT z.* FROM ztreams z INNER JOIN actives a ON (a.reference = z.name) WHERE z.name = a.reference
+		SELECT z.* FROM ztreams z INNER JOIN actives a ON (a.reference = z.name) WHERE a.type = 'ztream'
 		`
 	)
 

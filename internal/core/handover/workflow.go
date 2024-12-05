@@ -1,6 +1,7 @@
 package handover
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -53,7 +54,14 @@ func CreateZtream(ztreamName string) {
 		log.Fatal("Unable to save new ztream", "error", err)
 	}
 
+	fmt.Printf("git checkout -b %s\n", ztreamName)
 	if _, err := git.CreateBranch(ztreamName); err != nil {
+		log.Error("Failed to start handover!", "error", err)
+		return
+	}
+
+	fmt.Printf("git push --set-upstream orgin %s\n", ztreamName)
+	if _, err := git.PushSetOrigin(ztreamName); err != nil {
 		log.Error("Failed to start handover!", "error", err)
 		return
 	}
@@ -65,7 +73,7 @@ func CreateZtream(ztreamName string) {
 	}
 
 	untilEnd := time.Unix(curZt.Ends, 0).Sub(time.Now())
-	minsUntil := math.Trunc(untilEnd.Minutes())
+	minsUntil := math.Round(untilEnd.Minutes())
 	log.Info("Started ztream", "name", curZt.Name, "mins left", minsUntil)
 }
 
@@ -102,29 +110,32 @@ func Next() {
 }
 
 func Start() {
-	if isActiveZtream() {
-		log.Info("Starting ztream...")
-		if _, err := git.Pull(); err != nil {
-			log.Error("Failed to start handover!", "error", err)
-			return
-		}
-	} else {
-		log.Error("No active ztream found! Create a ztream before starting")
+	if !isActiveZtream() {
+		return
+	}
+
+	log.Info("Starting ztream...")
+
+	if _, err := git.Pull(); err != nil {
+		log.Error("Failed to start handover!", "error", err)
+		return
 	}
 }
 
 func isActiveZtream() bool {
 	branch, err := git.CurrentBranch()
 	if err != nil {
+		log.Error("Unable to get current branch", "error", err)
 		return false
 	}
 
 	if ztream, err := state.Storer.GetActiveZtream(); err != nil || ztream.Name != branch {
-		log.Error("Join the ztream before starting.", "branch", branch, "active ztream", ztream.Name)
+		log.Error("Join the ztream before starting.", "branch", branch, "active_ztream", ztream.Name)
 		return false
 	}
 
 	if branch == "master" || branch == "main" {
+		log.Error("Cannot start a ztream on main/master!")
 		return false
 	}
 
