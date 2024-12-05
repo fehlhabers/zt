@@ -107,15 +107,16 @@ func JoinZtream(ztreamName string) {
 }
 
 func Next() {
-	if isActiveZtream() {
-		log.Info("Handing over...")
-		git.AddAll()
-		git.Commit("zt handover")
-		git.Push()
-		log.Info("Handover done!")
-	} else {
+	if !isActiveZtream() {
 		log.Error("No active ztream found! Make sure you are in the right branch")
+		return
 	}
+
+	log.Info("Handing over...")
+	git.AddAll()
+	git.Commit("zt handover")
+	git.Push()
+	log.Info("Handover done! ✅")
 }
 
 func Start() {
