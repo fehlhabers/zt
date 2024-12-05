@@ -9,6 +9,7 @@ import (
 	"github.com/fehlhabers/zt/internal/adapter/git"
 	"github.com/fehlhabers/zt/internal/adapter/state"
 	"github.com/fehlhabers/zt/internal/core/config"
+	"github.com/fehlhabers/zt/internal/core/timer"
 	"github.com/fehlhabers/zt/internal/domain"
 	"github.com/fehlhabers/zt/internal/model"
 )
@@ -107,6 +108,8 @@ func JoinZtream(ztreamName string) {
 }
 
 func Next() {
+	PrintCurrentZtream()
+
 	if !isActiveZtream() {
 		log.Error("No active ztream found! Make sure you are in the right branch")
 		return
@@ -120,6 +123,8 @@ func Next() {
 }
 
 func Start() {
+	PrintCurrentZtream()
+
 	if !isActiveZtream() {
 		return
 	}
@@ -144,6 +149,7 @@ func Start() {
 	teamCfg := cfg.ActiveTeamConfig()
 	z.StartSession(teamCfg.SessionDurMins)
 	state.Storer.StoreZtream(z)
+	timer.Start(&z, teamCfg)
 }
 
 func isActiveZtream() bool {
@@ -164,4 +170,13 @@ func isActiveZtream() bool {
 	}
 
 	return true
+}
+
+func PrintCurrentZtream() {
+	if ztream, err := state.Storer.GetActiveZtream(); err == nil {
+		endTime := time.Unix(ztream.Ends, 0)
+		endsIn := endTime.Sub(time.Now()).Round(time.Minute)
+
+		log.Info("Current ztream -", "name", ztream.Name, "ends in", endsIn.String())
+	}
 }

@@ -78,6 +78,7 @@ func NewConfigure() *cobra.Command {
 				SessionDurMins: sessionMins,
 				MainBranch:     mainBranch,
 			}
+
 			config.AddTeam(name, *teamCfg)
 			log.Infof("Team %s added!", name)
 		},
