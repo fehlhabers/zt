@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 func Stash() (stdout string, err error) {
@@ -23,7 +24,8 @@ func CreateBranch(branch string) (string, error) {
 }
 
 func CurrentBranch() (string, error) {
-	return git("branch", "--show-current")
+	branch, err := git("branch", "--show-current")
+	return strings.Trim(branch, "\n"), err
 }
 
 func Fetch() (stdout string, err error) {
@@ -46,8 +48,8 @@ func Push() (stdout string, err error) {
 	return git("push")
 }
 
-func PushSetOrigin() (stdout string, err error) {
-	return git("push", "--set-upstream", "origin", "HEAD")
+func PushSetOrigin(branch string) (stdout string, err error) {
+	return git("push", "--set-upstream", "origin", branch)
 }
 
 func git(arguments ...string) (stdout string, err error) {

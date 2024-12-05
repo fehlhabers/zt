@@ -11,6 +11,8 @@ func NewTeam() *cobra.Command {
 		Long:  `Team commands such as setting, listing teams, etc`,
 	}
 
-	cmd.AddCommand(NewSet())
+	cmd.AddCommand(NewList())
+	cmd.AddCommand(NewConfigure())
+	cmd.AddCommand(NewSwitch())
 	return cmd
 }
