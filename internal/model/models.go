@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 const CreateActivesTable = `
 	CREATE TABLE IF NOT EXISTS actives (
 		type text PRIMARY KEY,
@@ -37,6 +39,15 @@ type Ztream struct {
 	Started int64  `db:"started"`
 	Ends    int64  `db:"ends"`
 	Team    string `db:"team"`
+}
+
+func (z *Ztream) StartSession(sessionMins int) {
+	startTime := time.Now()
+	endTime := startTime.Add(time.Duration(sessionMins))
+
+	_ = endTime
+	z.Started = startTime.Unix()
+	z.Ends = endTime.Unix()
 }
 
 const CreateMembersTable = `

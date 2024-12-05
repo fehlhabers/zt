@@ -9,27 +9,22 @@ import (
 	"github.com/fehlhabers/zt/internal/adapter/git"
 	"github.com/fehlhabers/zt/internal/adapter/state"
 	"github.com/fehlhabers/zt/internal/core/config"
+	"github.com/fehlhabers/zt/internal/domain"
 	"github.com/fehlhabers/zt/internal/model"
 )
 
-var (
-	mainBranches = []string{
-		"main",
-		"master",
-	}
-)
-
-func CreateZtream(ztreamName string) {
+func mustGetConfig() *domain.ZtTeamConfig {
 	cfg, err := config.ZtConfig()
 	if err != nil {
-		log.Error("Failed to create ztream!", "error", err)
+		log.Fatal("Failed to create ztream!", "error", err)
 	}
 
-	teamName, teamCfg, err := cfg.ActiveTeamConfig()
-	if err != nil {
-		log.Error("Failed to create ztream!", "error", err)
-		return
-	}
+	return cfg.ActiveTeamConfig()
+}
+
+func CreateZtream(ztreamName string) {
+
+	teamCfg := mustGetConfig()
 
 	branch, err := git.CurrentBranch()
 	if err != nil {
@@ -37,7 +32,7 @@ func CreateZtream(ztreamName string) {
 		return
 	}
 
-	if teamCfg.MainBranch == branch {
+	if teamCfg.MainBranch != branch {
 		log.Warn("It is recommended to start a ztream from main/master")
 	}
 
@@ -47,7 +42,7 @@ func CreateZtream(ztreamName string) {
 		Name:    ztreamName,
 		Started: now,
 		Ends:    now + int64(teamCfg.SessionDurMins*60),
-		Team:    teamName,
+		Team:    teamCfg.Name,
 	}
 
 	if err := state.Storer.StoreZtream(zt); err != nil {
@@ -95,6 +90,20 @@ func JoinZtream(ztreamName string) {
 		log.Warn("Unable to pull latest changes from remote", "error", err)
 		return
 	}
+
+	teamCfg := mustGetConfig()
+
+	now := time.Now().Unix()
+
+	z := model.Ztream{
+		Name:    ztreamName,
+		Started: now,
+		Ends:    now,
+		Team:    teamCfg.Name,
+	}
+	state.Storer.StoreZtream(z)
+
+	log.Info("Joined the ztream! 🙌")
 }
 
 func Next() {
@@ -120,6 +129,20 @@ func Start() {
 		log.Error("Failed to start handover!", "error", err)
 		return
 	}
+
+	z, err := state.Storer.GetActiveZtream()
+	if err != nil {
+		return
+	}
+
+	cfg, err := config.ZtConfig()
+	if err != nil {
+		log.Fatal("Invalid configuration", "error", err)
+	}
+
+	teamCfg := cfg.ActiveTeamConfig()
+	z.StartSession(teamCfg.SessionDurMins)
+	state.Storer.StoreZtream(z)
 }
 
 func isActiveZtream() bool {

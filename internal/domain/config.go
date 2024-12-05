@@ -1,9 +1,5 @@
 package domain
 
-import (
-	"github.com/fehlhabers/zt/internal/errors"
-)
-
 type ZtConfig struct {
 	ActiveTeam string                `json:"active_team,omitempty"`
 	Teams      map[string]TeamConfig `json:"teams,omitempty"`
@@ -29,19 +25,33 @@ func (z *ZtConfig) Valid() bool {
 		return false
 	}
 
+	if _, ok := z.Teams[z.ActiveTeam]; !ok {
+		return false
+	}
+
 	return true
 }
 
-func (z *ZtConfig) ActiveTeamConfig() (teamName string, teamConfig *TeamConfig, err error) {
+func (z *ZtConfig) ActiveTeamConfig() *ZtTeamConfig {
 
 	if team, ok := z.Teams[z.ActiveTeam]; ok {
-		return z.ActiveTeam, &team, nil
+		return &ZtTeamConfig{
+			Name:           z.ActiveTeam,
+			SessionDurMins: team.SessionDurMins,
+			MainBranch:     team.MainBranch,
+		}
 	}
 
-	return "", nil, errors.NoTeamSet
+	return nil
 }
 
 type TeamConfig struct {
 	SessionDurMins int    `json:"session_dur_mins,omitempty"`
 	MainBranch     string `json:"main_branch,omitempty"`
+}
+
+type ZtTeamConfig struct {
+	Name           string
+	SessionDurMins int
+	MainBranch     string
 }
