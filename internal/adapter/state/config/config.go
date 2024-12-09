@@ -10,26 +10,47 @@ import (
 	"github.com/fehlhabers/zt/internal/errors"
 )
 
-const (
-	CfgHomeFileDir = ".local/state/zt"
-)
-
-var (
-	zt *domain.ZtConfig
-)
-
-func ZtConfig() (domain.ZtConfig, error) {
-	if !zt.Valid() {
-		return domain.ZtConfig{}, errors.NoZtConfigFound
-	}
-	return *zt, nil
+type ZtConfig struct {
+	ActiveTeam string                        `json:"active_team,omitempty"`
+	Teams      map[string]*domain.TeamConfig `json:"teams,omitempty"`
 }
 
-func AddTeam(teamName string, team domain.TeamConfig) error {
+type ConfigRepo struct {
+	statePath string
+}
+
+func NewZtConfig(teamName string, team *domain.TeamConfig) *ZtConfig {
+	cfg := &ZtConfig{
+		ActiveTeam: teamName,
+		Teams:      make(map[string]*domain.TeamConfig),
+	}
+
+	cfg.Teams[teamName] = team
+
+	return cfg
+}
+
+func (z *ZtConfig) Valid() bool {
+	if z.ActiveTeam == "" {
+		return false
+	}
+
+	if z.Teams == nil {
+		return false
+	}
+
+	if _, ok := z.Teams[z.ActiveTeam]; !ok {
+		return false
+	}
+
+	return true
+}
+
+func AddTeam(teamName string, team *domain.TeamConfig) error {
 	ztConfig, err := readConfig()
 	if err != nil || !ztConfig.Valid() {
 		log.Info("No configuration found. Creating new config 👌")
-		ztConfig = domain.NewZtConfig(teamName, team)
+		ztConfig = NewZtConfig(teamName, team)
 	} else {
 		ztConfig.Teams[teamName] = team
 	}
@@ -38,8 +59,15 @@ func AddTeam(teamName string, team domain.TeamConfig) error {
 		return fmt.Errorf("unable to write config. error=%w", err)
 	}
 
-	ReloadConfig()
 	return nil
+}
+
+func ListTeams() map[string]*domain.TeamConfig {
+	cfg, err := readConfig()
+	if err != nil {
+		return make(map[string]*domain.TeamConfig)
+	}
+	return cfg.Teams
 }
 
 func SwitchTeam(teamName string) error {
@@ -56,14 +84,13 @@ func SwitchTeam(teamName string) error {
 	if err := writeConfig(cfg); err != nil {
 		return fmt.Errorf("unable to write config. error=%w", err)
 	}
-	ReloadConfig()
 	return nil
 }
 
 // Internal writer to be used by exported methods
-func writeConfig(ztCfg *domain.ZtConfig) error {
-	if _, err := os.ReadDir(GetCfgFileDir()); err != nil {
-		os.MkdirAll(GetCfgFileDir(), os.ModePerm)
+func writeConfig(ztCfg *ZtConfig) error {
+	if _, err := os.ReadDir(state.GetStatePath()); err != nil {
+		os.MkdirAll(state.GetStatePath(), os.ModePerm)
 	}
 
 	cfg, err := os.OpenFile(getCfgFile(), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
@@ -85,29 +112,24 @@ func writeConfig(ztCfg *domain.ZtConfig) error {
 	return nil
 }
 
-func GetCfgFileDir() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Warn("Unable to get home directory!")
-	}
-	return fmt.Sprintf("%s/%s", home, CfgHomeFileDir)
-}
-
 func getCfgFile() string {
-	return fmt.Sprintf("%s/%s", GetCfgFileDir(), "config")
+	return fmt.Sprintf("%s/%s", state.GetStatePath(), "config")
 }
 
-func ReloadConfig() error {
+func Reload(state *domain.ZtState) error {
 	cfg, err := readConfig()
 	if err != nil {
 		return err
 	}
-	zt = cfg
 
+	state.TeamName = cfg.ActiveTeam
+	if team, ok := cfg.Teams[cfg.ActiveTeam]; ok {
+		state.TeamConfig = team
+	}
 	return nil
 }
 
-func readConfig() (*domain.ZtConfig, error) {
+func readConfig() (*ZtConfig, error) {
 	configReader, err := os.Open(getCfgFile())
 	if err != nil {
 		return nil, errors.NoZtConfigFound
@@ -115,7 +137,7 @@ func readConfig() (*domain.ZtConfig, error) {
 
 	defer configReader.Close()
 
-	ztConfig := &domain.ZtConfig{}
+	ztConfig := &ZtConfig{}
 
 	if err := json.NewDecoder(configReader).Decode(ztConfig); err != nil {
 		return nil, err

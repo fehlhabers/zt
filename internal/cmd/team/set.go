@@ -2,7 +2,7 @@ package team
 
 import (
 	"github.com/charmbracelet/log"
-	"github.com/fehlhabers/zt/internal/core/config"
+	"github.com/fehlhabers/zt/internal/adapter/state/config"
 	"github.com/spf13/cobra"
 )
 

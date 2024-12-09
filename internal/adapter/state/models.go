@@ -1,5 +1,11 @@
 package state
 
+import (
+	"time"
+
+	"github.com/fehlhabers/zt/internal/domain"
+)
+
 const CreateActivesTable = `
 	CREATE TABLE IF NOT EXISTS actives (
 		type text PRIMARY KEY,
@@ -10,31 +16,42 @@ const CreateZtreamsTable = `
 	CREATE TABLE IF NOT EXISTS ztreams (
 		name text PRIMARY KEY,
 	    started numeric,
-		ends numeric,
-	    team text REFERENCES teams
+		ends numeric
 	)`
 
 const InsertZtream = `
 		INSERT INTO ztreams (
 				name,
 				started, 
-				ends, 
-				team
+				ends
 		) values (
 				:name,
 				:started,
-				:ends,
-				:team
+				:ends
 		)
 		ON CONFLICT (name) DO UPDATE SET
 				started=:started,
-				ends=:ends,
-				team=:team
+				ends=:ends
 		`
 
-type Ztream struct {
+type ZtreamDb struct {
 	Name    string `db:"name"`
 	Started int64  `db:"started"`
 	Ends    int64  `db:"ends"`
-	Team    string `db:"team"`
+}
+
+func (ztream *ZtreamDb) ToZtream() *domain.Ztream {
+	return &domain.Ztream{
+		Name:    ztream.Name,
+		Started: time.Unix(ztream.Started, 0),
+		Ends:    time.Unix(ztream.Ends, 0),
+	}
+}
+
+func NewZtreamDb(ztream *domain.Ztream) *ZtreamDb {
+	return &ZtreamDb{
+		Name:    ztream.Name,
+		Started: ztream.Started.Unix(),
+		Ends:    ztream.Ends.Unix(),
+	}
 }

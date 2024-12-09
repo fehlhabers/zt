@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/log"
-	"github.com/fehlhabers/zt/internal/core/config"
+	"github.com/fehlhabers/zt/internal/adapter/state/config"
 	"github.com/fehlhabers/zt/internal/domain"
 )
 
@@ -65,6 +65,6 @@ func Configure() {
 		MainBranch:     mainBranch,
 	}
 
-	config.AddTeam(name, *teamCfg)
+	config.AddTeam(name, teamCfg)
 	log.Infof("Team %s added!", name)
 }

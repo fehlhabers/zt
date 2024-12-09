@@ -7,25 +7,14 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/fehlhabers/zt/internal/adapter/git"
-	"github.com/fehlhabers/zt/internal/adapter/state"
-	"github.com/fehlhabers/zt/internal/core/config"
+	"github.com/fehlhabers/zt/internal/core/state"
 	"github.com/fehlhabers/zt/internal/core/timer"
 	"github.com/fehlhabers/zt/internal/domain"
-	"github.com/fehlhabers/zt/internal/model"
 )
-
-func mustGetConfig() *domain.ZtTeamConfig {
-	cfg, err := config.ZtConfig()
-	if err != nil {
-		log.Fatal("Failed to create ztream!", "error", err)
-	}
-
-	return cfg.ActiveTeamConfig()
-}
 
 func CreateZtream(ztreamName string) {
 
-	teamCfg := mustGetConfig()
+	ztState := state.GetState()
 
 	branch, err := git.CurrentBranch()
 	if err != nil {
@@ -33,20 +22,13 @@ func CreateZtream(ztreamName string) {
 		return
 	}
 
-	if teamCfg.MainBranch != branch {
+	if ztState.TeamConfig.MainBranch != branch {
 		log.Warn("It is recommended to start a ztream from main/master")
 	}
 
-	now := time.Now().Unix()
+	zt := domain.NewZtream(ztreamName, ztState.TeamConfig)
 
-	zt := model.Ztream{
-		Name:    ztreamName,
-		Started: now,
-		Ends:    now + int64(teamCfg.SessionDurMins*60),
-		Team:    teamCfg.Name,
-	}
-
-	if err := state.Storer.StoreZtream(zt); err != nil {
+	if err := state.Ztreams.StoreZtream(zt); err != nil {
 		log.Fatal("Unable to save new ztream", "error", err)
 	}
 
@@ -62,13 +44,13 @@ func CreateZtream(ztreamName string) {
 		return
 	}
 
-	curZt, err := state.Storer.GetActiveZtream()
+	curZt, err := state.Ztreams.GetActiveZtream()
 	if err != nil {
 		log.Warn("Unable to fetch current local ztream")
 		return
 	}
 
-	untilEnd := time.Unix(curZt.Ends, 0).Sub(time.Now())
+	untilEnd := curZt.Ends.Sub(time.Now())
 	minsUntil := math.Round(untilEnd.Minutes())
 	log.Info("Started ztream", "name", curZt.Name, "mins left", minsUntil)
 }
@@ -92,17 +74,14 @@ func JoinZtream(ztreamName string) {
 		return
 	}
 
-	teamCfg := mustGetConfig()
+	now := time.Now()
 
-	now := time.Now().Unix()
-
-	z := model.Ztream{
+	z := &domain.Ztream{
 		Name:    ztreamName,
 		Started: now,
 		Ends:    now,
-		Team:    teamCfg.Name,
 	}
-	state.Storer.StoreZtream(z)
+	state.Ztreams.StoreZtream(z)
 
 	log.Info("Joined the ztream! 🙌")
 }
@@ -123,6 +102,7 @@ func Next() {
 }
 
 func Start() {
+	ztState := state.GetState()
 	PrintCurrentZtream()
 
 	if !isActiveZtream() {
@@ -136,20 +116,11 @@ func Start() {
 		return
 	}
 
-	z, err := state.Storer.GetActiveZtream()
-	if err != nil {
-		return
-	}
-
-	cfg, err := config.ZtConfig()
-	if err != nil {
-		log.Fatal("Invalid configuration", "error", err)
-	}
-
-	teamCfg := cfg.ActiveTeamConfig()
+	z := ztState.CurrentZtream
+	teamCfg := ztState.TeamConfig
 	z.StartSession(teamCfg.SessionDurMins)
-	state.Storer.StoreZtream(z)
-	timer.Start(&z, teamCfg)
+	state.Ztreams.StoreZtream(z)
+	timer.Start(&ztState)
 }
 
 func isActiveZtream() bool {
@@ -159,7 +130,7 @@ func isActiveZtream() bool {
 		return false
 	}
 
-	if ztream, err := state.Storer.GetActiveZtream(); err != nil || ztream.Name != branch {
+	if ztream, err := state.Ztreams.GetActiveZtream(); err != nil || ztream.Name != branch {
 		log.Error("Join the ztream before starting.", "branch", branch, "active_ztream", ztream.Name)
 		return false
 	}
@@ -173,9 +144,8 @@ func isActiveZtream() bool {
 }
 
 func PrintCurrentZtream() {
-	if ztream, err := state.Storer.GetActiveZtream(); err == nil {
-		endTime := time.Unix(ztream.Ends, 0)
-		endsIn := endTime.Sub(time.Now()).Round(time.Minute)
+	if ztream, err := state.Ztreams.GetActiveZtream(); err == nil {
+		endsIn := ztream.Ends.Sub(time.Now()).Round(time.Minute)
 
 		log.Info("Current ztream -", "name", ztream.Name, "ends in", endsIn.String())
 	}

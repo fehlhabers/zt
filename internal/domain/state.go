@@ -5,21 +5,25 @@ import "time"
 type ZtState struct {
 	User          string
 	TeamName      string
-	TeamConfig    TeamConfig
-	CurrentZtream Ztream
+	TeamConfig    *TeamConfig
+	CurrentZtream *Ztream
 }
 
 type Ztream struct {
-	Name    string `db:"name"`
-	Started int64  `db:"started"`
-	Ends    int64  `db:"ends"`
+	Name    string
+	Started time.Time
+	Ends    time.Time
+}
+
+func NewZtream(name string, cfg *TeamConfig) *Ztream {
+	z := &Ztream{
+		Name: name,
+	}
+	z.StartSession(cfg.SessionDurMins)
+	return z
 }
 
 func (z *Ztream) StartSession(sessionMins int) {
-	startTime := time.Now()
-	endTime := startTime.Add(time.Duration(sessionMins))
-
-	_ = endTime
-	z.Started = startTime.Unix()
-	z.Ends = endTime.Unix()
+	z.Started = time.Now()
+	z.Ends = time.Now().Add(time.Duration(sessionMins))
 }

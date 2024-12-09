@@ -3,7 +3,7 @@ package team
 import (
 	"fmt"
 
-	"github.com/fehlhabers/zt/internal/core/config"
+	"github.com/fehlhabers/zt/internal/adapter/state/config"
 	"github.com/spf13/cobra"
 )
 
@@ -13,14 +13,10 @@ func NewList() *cobra.Command {
 		Short: "List all configured teams",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
-			zt, err := config.ZtConfig()
-			if err != nil {
-				return
-			}
+			teams := config.ListTeams()
 
-			fmt.Printf("Active team: %s\n\n", zt.ActiveTeam)
 			fmt.Printf("Teams:\n")
-			for name := range zt.Teams {
+			for name := range teams {
 				fmt.Printf("- %s\n", name)
 			}
 		},
@@ -28,4 +24,3 @@ func NewList() *cobra.Command {
 
 	return cmd
 }
-

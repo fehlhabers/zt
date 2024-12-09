@@ -9,7 +9,6 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/fehlhabers/zt/internal/domain"
-	"github.com/fehlhabers/zt/internal/model"
 )
 
 const (
@@ -21,14 +20,14 @@ type TimerReq struct {
 	User  string `json:"user,omitempty"`
 }
 
-func Start(zt *model.Ztream, cfg *domain.ZtTeamConfig) {
+func Start(zt *domain.ZtState) {
 
 	client := http.DefaultClient
-	safeZtream := strings.ReplaceAll(zt.Name, "/", "-")
-	url := fmt.Sprintf("%s/%s-%s", timerUrl, cfg.Name, safeZtream)
+	safeZtream := strings.ReplaceAll(zt.CurrentZtream.Name, "/", "-")
+	url := fmt.Sprintf("%s/%s-%s", timerUrl, zt.TeamName, safeZtream)
 	reqBody := &TimerReq{
-		Timer: cfg.SessionDurMins,
-		User:  "kaj",
+		Timer: zt.TeamConfig.SessionDurMins,
+		User:  zt.User,
 	}
 	bodyBytes, err := json.Marshal(reqBody)
 	if err != nil {

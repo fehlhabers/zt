@@ -9,7 +9,7 @@ import (
 )
 
 func TestAlterTeam(t *testing.T) {
-	team := domain.TeamConfig{
+	team := &domain.TeamConfig{
 		SessionDurMins: 10,
 		MainBranch:     "main",
 	}
