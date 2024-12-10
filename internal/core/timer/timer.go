@@ -23,7 +23,7 @@ type TimerReq struct {
 func Start(zt *domain.ZtState) {
 
 	client := http.DefaultClient
-	safeZtream := strings.ReplaceAll(zt.CurrentZtream.Name, "/", "-")
+	safeZtream := strings.ReplaceAll(zt.CurZtream.Name, "/", "-")
 	url := fmt.Sprintf("%s/%s-%s", timerUrl, zt.TeamName, safeZtream)
 	reqBody := &TimerReq{
 		Timer: zt.TeamConfig.SessionDurMins,

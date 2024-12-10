@@ -17,11 +17,11 @@ var (
 	errNoDefaultTeam        = errors.New("no default team found")
 )
 
-type ZtreamStorer struct {
+type ZtreamRepo struct {
 	db *sqlx.DB
 }
 
-func NewZtreamStorer(dbPath string) *ZtreamStorer {
+func NewZtreamStorer(dbPath string) *ZtreamRepo {
 
 	mustCreateDirectories(dbPath)
 
@@ -39,20 +39,21 @@ func NewZtreamStorer(dbPath string) *ZtreamStorer {
 		log.Fatal("Not able to prepare actives", "error", err)
 	}
 
-	return &ZtreamStorer{db: db}
+	return &ZtreamRepo{db: db}
 }
 
-func (z *ZtreamStorer) Reload(zt *domain.ZtState) {
+func (z *ZtreamRepo) Reload(zt *domain.ZtState) {
 
-	ztream, err := z.GetActiveZtream()
+	curZtream, err := z.GetActiveZtream()
 	if err != nil {
 		return
 	}
 
-	zt.CurrentZtream = ztream
+	zt.AllZtreams = z.GetAllZtreams()
+	zt.CurZtream = curZtream
 }
 
-func (z *ZtreamStorer) GetAllZtreams() []domain.Ztream {
+func (z *ZtreamRepo) GetAllZtreams() []*domain.Ztream {
 	var (
 		selectAllZtreams = `
 		SELECT z.* FROM ztreams z
@@ -63,22 +64,22 @@ func (z *ZtreamStorer) GetAllZtreams() []domain.Ztream {
 		return nil
 	}
 
-	var ztreams []domain.Ztream
+	var ztreams []*domain.Ztream
 	for rows.Next() {
-		var z domain.Ztream
+		var z state.ZtreamDb
 
 		err := rows.Scan(&z.Name, &z.Started, &z.Ends)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		ztreams = append(ztreams, z)
+		ztreams = append(ztreams, z.ToZtream())
 	}
 
 	return ztreams
 }
 
-func (z *ZtreamStorer) GetActiveZtream() (*domain.Ztream, error) {
+func (z *ZtreamRepo) GetActiveZtream() (*domain.Ztream, error) {
 	var zt state.ZtreamDb
 	var (
 		selectActiveZtream = `
@@ -92,7 +93,7 @@ func (z *ZtreamStorer) GetActiveZtream() (*domain.Ztream, error) {
 	return zt.ToZtream(), nil
 }
 
-func (z *ZtreamStorer) StoreZtream(zt *domain.Ztream) error {
+func (z *ZtreamRepo) StoreZtream(zt *domain.Ztream) error {
 	var (
 		setActiveZstream = `
 		INSERT INTO actives (

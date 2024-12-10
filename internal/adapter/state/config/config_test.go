@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"testing"
 
 	"github.com/fehlhabers/zt/internal/domain"
@@ -13,30 +14,31 @@ func TestAlterTeam(t *testing.T) {
 		SessionDurMins: 10,
 		MainBranch:     "main",
 	}
+	sut := NewConfigRepo(os.TempDir())
 	t.Run("add team happy case", func(t *testing.T) {
 
-		err := AddTeam("testTeam", team)
+		err := sut.AddTeam("testTeam", team)
 		assert.NoError(t, err)
 
-		actualZtConfig, err := readConfig()
+		actualZtConfig, err := sut.readConfig()
 		assert.NoError(t, err)
 
 		assert.Equal(t, actualZtConfig.Teams["testTeam"], team)
 	})
 
 	t.Run("switch team not found", func(t *testing.T) {
-		err := SwitchTeam("testTeam2")
+		err := sut.SwitchTeam("testTeam2")
 		assert.Error(t, errors.TeamNotFound, err)
 	})
 
 	t.Run("switch team - happy case", func(t *testing.T) {
-		err := AddTeam("testTeam2", team)
+		err := sut.AddTeam("testTeam2", team)
 		assert.NoError(t, err)
 
-		err = SwitchTeam("testTeam2")
+		err = sut.SwitchTeam("testTeam2")
 		assert.NoError(t, err)
 
-		actualCfg, err := readConfig()
+		actualCfg, err := sut.readConfig()
 		assert.NoError(t, err)
 
 		assert.Equal(t, "testTeam2", actualCfg.ActiveTeam)
@@ -44,9 +46,10 @@ func TestAlterTeam(t *testing.T) {
 }
 
 func TestReadConfig(t *testing.T) {
+	sut := NewConfigRepo(os.TempDir())
 	t.Run("error if file not found", func(t *testing.T) {
 
-		_, err := readConfig()
+		_, err := sut.readConfig()
 
 		assert.Error(t, errors.NoZtConfigFound, err)
 	})

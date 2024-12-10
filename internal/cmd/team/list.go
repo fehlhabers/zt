@@ -3,7 +3,7 @@ package team
 import (
 	"fmt"
 
-	"github.com/fehlhabers/zt/internal/adapter/state/config"
+	"github.com/fehlhabers/zt/internal/global"
 	"github.com/spf13/cobra"
 )
 
@@ -13,10 +13,12 @@ func NewList() *cobra.Command {
 		Short: "List all configured teams",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
-			teams := config.ListTeams()
 
+			state := global.GetStateKeeper().GetState()
+
+			fmt.Printf("Active Team: %s\n\n", state.TeamName)
 			fmt.Printf("Teams:\n")
-			for name := range teams {
+			for name := range state.AllTeams {
 				fmt.Printf("- %s\n", name)
 			}
 		},

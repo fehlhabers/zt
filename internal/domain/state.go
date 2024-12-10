@@ -3,16 +3,19 @@ package domain
 import "time"
 
 type ZtState struct {
-	User          string
-	TeamName      string
-	TeamConfig    *TeamConfig
-	CurrentZtream *Ztream
+	User       string
+	TeamName   string
+	TeamConfig *TeamConfig
+	AllTeams   map[string]*TeamConfig
+	CurZtream  *Ztream
+	AllZtreams []*Ztream
 }
 
 type Ztream struct {
-	Name    string
-	Started time.Time
-	Ends    time.Time
+	Name     string
+	Metadata map[string]string
+	Started  time.Time
+	Ends     time.Time
 }
 
 func NewZtream(name string, cfg *TeamConfig) *Ztream {
@@ -25,5 +28,5 @@ func NewZtream(name string, cfg *TeamConfig) *Ztream {
 
 func (z *Ztream) StartSession(sessionMins int) {
 	z.Started = time.Now()
-	z.Ends = time.Now().Add(time.Duration(sessionMins))
+	z.Ends = time.Now().Add(time.Minute * time.Duration(sessionMins))
 }
