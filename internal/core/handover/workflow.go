@@ -130,17 +130,17 @@ func Merge() {
 	_ = ztState
 
 	var stdout, stderr bytes.Buffer
-	cmd := exec.Command("gh", "pr", "create", "--title", fmt.Sprintf("\"%s\"", ztState.CurZtream.Name), "--body", fmt.Sprintf("\n%s\n", ztState.CurZtream.Metadata))
+	cmd := exec.Command("gh", "pr", "create", "--title", ztState.CurZtream.Name, "--body", ztState.CurZtream.Metadata)
 
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
 
 	err := cmd.Run()
 
-	log.Info(stdout.String)
+	log.Info(stdout.String())
 
 	if err != nil {
-		log.Error("Unable to create pull request", "error", stderr.String)
+		log.Error("Unable to create pull request", "error", stderr.String())
 	}
 }
 
