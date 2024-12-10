@@ -16,7 +16,11 @@ func NewSwitch() *cobra.Command {
 			if len(args) != 1 {
 				log.Fatal("Command requires 'team' to be included as argument")
 			}
-			global.GetStateKeeper().GetConfigRepo().SwitchTeam(args[0])
+			err := global.GetStateKeeper().GetConfigRepo().SwitchTeam(args[0])
+			if err != nil {
+				log.Error("Unable to switch team", "error", err)
+			}
+
 		},
 	}
 
