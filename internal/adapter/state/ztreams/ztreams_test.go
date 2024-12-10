@@ -1,4 +1,4 @@
-package state
+package ztreams
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fehlhabers/zt/internal/model"
+	"github.com/fehlhabers/zt/internal/domain"
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,11 +29,10 @@ func TestZtream(t *testing.T) {
 	sut := NewZtreamStorer(dbPath)
 	t.Run("store new ztream", func(t *testing.T) {
 
-		zt := model.Ztream{
+		zt := &domain.Ztream{
 			Name:    "zt",
-			Started: time.Now().Unix(),
-			Ends:    time.Now().Unix() + 60*15,
-			Team:    "test1",
+			Started: time.Now(),
+			Ends:    time.Now().Add(time.Minute * 15),
 		}
 		err := sut.StoreZtream(zt)
 		assert.NoError(t, err)
@@ -41,23 +40,22 @@ func TestZtream(t *testing.T) {
 		got, err := sut.GetActiveZtream()
 		assert.NoError(t, err)
 		fmt.Println(got)
-		assert.Equal(t, zt.Ends, got.Ends)
+		assert.Equal(t, zt.Ends.Unix(), got.Ends.Unix())
 	})
 
 	t.Run("update existing team", func(t *testing.T) {
 
-		zt := model.Ztream{
+		zt := &domain.Ztream{
 			Name:    "zt",
-			Started: time.Now().Unix(),
-			Ends:    time.Now().Unix() + 60*15,
-			Team:    "test1",
+			Started: time.Now(),
+			Ends:    time.Now().Add(time.Minute * 15),
 		}
 		err := sut.StoreZtream(zt)
 		assert.NoError(t, err)
 
 		got, err := sut.GetActiveZtream()
 		assert.NoError(t, err)
-		assert.Equal(t, zt.Ends, got.Ends)
+		assert.Equal(t, zt.Ends.Unix(), got.Ends.Unix())
 	})
 }
 

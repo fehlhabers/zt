@@ -1,4 +1,4 @@
-package state
+package ztreams
 
 import (
 	"errors"
@@ -6,24 +6,22 @@ import (
 	"os"
 
 	"github.com/charmbracelet/log"
-	"github.com/fehlhabers/zt/internal/model"
+	"github.com/fehlhabers/zt/internal/adapter/state"
+	"github.com/fehlhabers/zt/internal/domain"
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/jmoiron/sqlx"
 )
 
 var (
-	// global storer since it's a CLI
-	Storer *ZtreamStorer
-
 	errMultipleDefaultTeams = errors.New("multiple default teams found")
 	errNoDefaultTeam        = errors.New("no default team found")
 )
 
-type ZtreamStorer struct {
+type ZtreamRepo struct {
 	db *sqlx.DB
 }
 
-func NewZtreamStorer(dbPath string) *ZtreamStorer {
+func NewZtreamStorer(dbPath string) *ZtreamRepo {
 
 	mustCreateDirectories(dbPath)
 
@@ -33,22 +31,29 @@ func NewZtreamStorer(dbPath string) *ZtreamStorer {
 		log.Fatal("Not able to create db instance", "path", dbPath, "error", err)
 	}
 
-	if _, err := db.Exec(model.CreateZtreamsTable); err != nil {
+	if _, err := db.Exec(state.CreateZtreamsTable); err != nil {
 		log.Fatal("Not able to prepare ztream", "error", err)
 	}
 
-	if _, err := db.Exec(model.CreateActivesTable); err != nil {
+	if _, err := db.Exec(state.CreateActivesTable); err != nil {
 		log.Fatal("Not able to prepare actives", "error", err)
 	}
 
-	if _, err := db.Exec(model.CreateMembersTable); err != nil {
-		log.Fatal("Not able to prepare members", "error", err)
-	}
-
-	return &ZtreamStorer{db: db}
+	return &ZtreamRepo{db: db}
 }
 
-func (z *ZtreamStorer) GetAllZtreams() []model.Ztream {
+func (z *ZtreamRepo) Reload(zt *domain.ZtState) {
+
+	curZtream, err := z.GetActiveZtream()
+	if err != nil {
+		return
+	}
+
+	zt.AllZtreams = z.GetAllZtreams()
+	zt.CurZtream = curZtream
+}
+
+func (z *ZtreamRepo) GetAllZtreams() []*domain.Ztream {
 	var (
 		selectAllZtreams = `
 		SELECT z.* FROM ztreams z
@@ -59,23 +64,23 @@ func (z *ZtreamStorer) GetAllZtreams() []model.Ztream {
 		return nil
 	}
 
-	var ztreams []model.Ztream
+	var ztreams []*domain.Ztream
 	for rows.Next() {
-		var z model.Ztream
+		var z state.ZtreamDb
 
-		err := rows.Scan(&z.Name, &z.Started, &z.Ends, &z.Team)
+		err := rows.Scan(&z.Name, &z.Started, &z.Ends)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		ztreams = append(ztreams, z)
+		ztreams = append(ztreams, z.ToZtream())
 	}
 
 	return ztreams
 }
 
-func (z *ZtreamStorer) GetActiveZtream() (model.Ztream, error) {
-	var zt model.Ztream
+func (z *ZtreamRepo) GetActiveZtream() (*domain.Ztream, error) {
+	var zt state.ZtreamDb
 	var (
 		selectActiveZtream = `
 		SELECT z.* FROM ztreams z INNER JOIN actives a ON (a.reference = z.name) WHERE a.type = 'ztream'
@@ -83,13 +88,12 @@ func (z *ZtreamStorer) GetActiveZtream() (model.Ztream, error) {
 	)
 
 	if err := z.db.Get(&zt, selectActiveZtream); err != nil {
-		return zt, err
+		return nil, err
 	}
-	return zt, nil
+	return zt.ToZtream(), nil
 }
 
-// StoreZtream implements model.Storer.
-func (z *ZtreamStorer) StoreZtream(zt model.Ztream) error {
+func (z *ZtreamRepo) StoreZtream(zt *domain.Ztream) error {
 	var (
 		setActiveZstream = `
 		INSERT INTO actives (
@@ -103,11 +107,12 @@ func (z *ZtreamStorer) StoreZtream(zt model.Ztream) error {
 			reference = :name
 		`
 	)
-	if _, err := z.db.NamedExec(model.InsertZtream, &zt); err != nil {
+	dbZt := state.NewZtreamDb(zt)
+	if _, err := z.db.NamedExec(state.InsertZtream, &dbZt); err != nil {
 		return err
 	}
 
-	if _, err := z.db.NamedExec(setActiveZstream, &zt); err != nil {
+	if _, err := z.db.NamedExec(setActiveZstream, &dbZt); err != nil {
 		return err
 	}
 

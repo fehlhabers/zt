@@ -21,6 +21,7 @@ by leveraging different git branches`,
 	cmd.AddCommand(NewStart())
 	cmd.AddCommand(NewJoin())
 	cmd.AddCommand(NewNext())
+	cmd.AddCommand(NewMerge())
 	cmd.AddCommand(NewCreate())
 	cmd.AddCommand(team.NewTeam())
 

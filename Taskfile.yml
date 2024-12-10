@@ -1,6 +1,12 @@
 version: '3'
 
 tasks:
+  install:
+    aliases:
+      - i
+    cmds:
+      - go install ./cmd/zt
+
   run:
     cmds:
       - go run ./cmd/zt
