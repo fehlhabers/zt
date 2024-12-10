@@ -15,6 +15,7 @@ const CreateActivesTable = `
 const CreateZtreamsTable = `
 	CREATE TABLE IF NOT EXISTS ztreams (
 		name text PRIMARY KEY,
+		metadata text,
 	    started numeric,
 		ends numeric
 	)`
@@ -22,10 +23,12 @@ const CreateZtreamsTable = `
 const InsertZtream = `
 		INSERT INTO ztreams (
 				name,
+				metadata,
 				started, 
 				ends
 		) values (
 				:name,
+				:metadata,
 				:started,
 				:ends
 		)
@@ -35,16 +38,18 @@ const InsertZtream = `
 		`
 
 type ZtreamDb struct {
-	Name    string `db:"name"`
-	Started int64  `db:"started"`
-	Ends    int64  `db:"ends"`
+	Name     string `db:"name"`
+	Metadata string `db:"metadata"`
+	Started  int64  `db:"started"`
+	Ends     int64  `db:"ends"`
 }
 
 func (ztream *ZtreamDb) ToZtream() *domain.Ztream {
 	return &domain.Ztream{
-		Name:    ztream.Name,
-		Started: time.Unix(ztream.Started, 0),
-		Ends:    time.Unix(ztream.Ends, 0),
+		Name:     ztream.Name,
+		Metadata: ztream.Metadata,
+		Started:  time.Unix(ztream.Started, 0),
+		Ends:     time.Unix(ztream.Ends, 0),
 	}
 }
 

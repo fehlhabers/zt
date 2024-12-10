@@ -16,6 +16,7 @@ func Configure() {
 		name           string
 		sessionMinsStr string
 		mainBranch     string
+		mergeStrategy  string
 		confirm        bool
 	)
 
@@ -46,6 +47,12 @@ func Configure() {
 				Title("What branch is used as trunk/main/master?").
 				Value(&mainBranch),
 
+			huh.NewSelect[string]().
+				Title("Merge strategy").
+				Description("Currently, only github PR merge is available").
+				Options(huh.NewOptions(domain.MergeStrategyGithubPr)...).
+				Value(&mergeStrategy),
+
 			huh.NewConfirm().
 				Title("Add Team?").
 				Value(&confirm),
@@ -63,6 +70,7 @@ func Configure() {
 	teamCfg := &domain.TeamConfig{
 		SessionDurMins: sessionMins,
 		MainBranch:     mainBranch,
+		MergeStrategy:  mergeStrategy,
 	}
 
 	global.GetStateKeeper().GetConfigRepo().AddTeam(name, teamCfg)

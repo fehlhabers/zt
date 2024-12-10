@@ -13,7 +13,7 @@ type ZtState struct {
 
 type Ztream struct {
 	Name     string
-	Metadata map[string]string
+	Metadata string
 	Started  time.Time
 	Ends     time.Time
 }

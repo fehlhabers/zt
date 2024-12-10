@@ -12,7 +12,7 @@ import (
 	"github.com/fehlhabers/zt/internal/global"
 )
 
-func CreateZtream(ztreamName string) {
+func CreateZtream(ztreamName string, metadata string) {
 
 	ztState := global.GetStateKeeper().GetState()
 
@@ -117,6 +117,16 @@ func Start() {
 	global.GetStateKeeper().GetZtreamRepo().StoreZtream(z)
 	timer.Start(&ztState)
 	PrintCurrentZtream()
+}
+
+func Merge() {
+	if !isActiveZtream() {
+		return
+	}
+
+	ztState := global.GetStateKeeper().GetState()
+	_ = ztState
+
 }
 
 func isActiveZtream() bool {
