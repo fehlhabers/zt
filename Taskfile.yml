@@ -5,17 +5,17 @@ tasks:
     aliases:
       - i
     cmds:
-      - go install ./cmd/zt
+      - go install .
 
   run:
     cmds:
-      - go run ./cmd/zt
+      - go run .
 
   build:
     aliases:
       - b
     cmds:
-      - go build -o bin/zt ./cmd/zt
+      - go build -o bin/zt .
 
   test:
     aliases:
