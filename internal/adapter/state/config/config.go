@@ -131,6 +131,7 @@ func (c *ConfigRepo) Reload(state *domain.ZtState) error {
 
 	state.TeamName = cfg.ActiveTeam
 	state.AllTeams = cfg.Teams
+	state.User = cfg.User
 
 	if team, ok := cfg.Teams[cfg.ActiveTeam]; ok {
 		state.TeamConfig = team

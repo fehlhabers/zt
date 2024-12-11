@@ -18,6 +18,11 @@ func CreateZtream(ztreamName string, metadata string) {
 
 	ztState := global.GetStateKeeper().GetState()
 
+	if err := ztState.Validate(); err != nil {
+		log.Error("Missing configuration", "error", err)
+		return
+	}
+
 	branch, err := git.CurrentBranch()
 	if err != nil {
 		log.Error("Failed to create ztream!", "error", err)

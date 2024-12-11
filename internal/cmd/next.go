@@ -11,13 +11,8 @@ import (
 func NewNext() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "next",
-		Short: "A brief description of your command",
-		Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+		Short: "Handover to the next member of the mob/pair",
+		Long:  `Hands over to the next, by committing any changes in the ztream branch and pushing to remote.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			handover.Next()
 		},

@@ -68,7 +68,7 @@ func (z *ZtreamRepo) GetAllZtreams() []*domain.Ztream {
 	for rows.Next() {
 		var z state.ZtreamDb
 
-		err := rows.Scan(&z.Name, &z.Started, &z.Ends)
+		err := rows.Scan(&z.Name, &z.Metadata, &z.Started, &z.Ends)
 		if err != nil {
 			log.Fatal(err)
 		}
