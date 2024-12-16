@@ -34,6 +34,10 @@ func (z *Ztream) StartSession(sessionMins int) {
 	z.Ends = time.Now().Add(time.Minute * time.Duration(sessionMins))
 }
 
+func (z *ZtState) HasActiveZtream() bool {
+	return z.CurZtream != nil
+}
+
 func (z *ZtState) Validate() error {
 	if z.TeamConfig == nil {
 		return errors.New("no team configuration found. Run 'zt team configure'.")

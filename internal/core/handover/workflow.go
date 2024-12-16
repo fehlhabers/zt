@@ -2,6 +2,7 @@ package handover
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"math"
 	"os/exec"
@@ -37,18 +38,6 @@ func CreateZtream(ztreamName string, metadata string) {
 
 	if err := global.GetStateKeeper().GetZtreamRepo().StoreZtream(zt); err != nil {
 		log.Fatal("Unable to save new ztream", "error", err)
-	}
-
-	fmt.Printf("git checkout -b %s\n", ztreamName)
-	if _, err := git.CreateBranch(ztreamName); err != nil {
-		log.Error("Failed to start handover!", "error", err)
-		return
-	}
-
-	fmt.Printf("git push --set-upstream orgin %s\n", ztreamName)
-	if _, err := git.PushSetOrigin(ztreamName); err != nil {
-		log.Error("Failed to start handover!", "error", err)
-		return
 	}
 
 	curZt := global.GetStateKeeper().GetState().CurZtream
@@ -92,7 +81,7 @@ func JoinZtream(ztreamName string) {
 func Next() {
 	PrintCurrentZtream()
 
-	if !isActiveZtream() {
+	if !isOnZtreamBranch() {
 		log.Error("No active ztream found! Make sure you are in the right branch")
 		return
 	}
@@ -105,10 +94,42 @@ func Next() {
 }
 
 func Start() {
-	ztState := global.GetStateKeeper().GetState()
+	var (
+		zt         = global.GetStateKeeper().GetState()
+		ztreamName = zt.CurZtream.Name
+	)
 
-	if !isActiveZtream() {
-		return
+	_, err := git.Fetch()
+	if err != nil {
+		log.Fatal("Failed to fetch from remote")
+	}
+
+	branch, err := git.CurrentBranch()
+	if err != nil {
+		log.Fatal("Failed to get current branch")
+	}
+
+	if !zt.HasActiveZtream() {
+		log.Fatal("No active ztream found")
+	}
+
+	if zt.CurZtream.Name != branch {
+		log.Info("Not on ztream. Trying to switch/create", "ztream", zt.CurZtream.Name)
+		_, err := git.SwitchBranch(zt.CurZtream.Name)
+		if err != nil {
+			fmt.Printf("git checkout -b %s\n", ztreamName)
+			if _, err := git.CreateBranch(ztreamName); err != nil {
+				log.Fatal("Failed to start handover!", "error", err)
+				return
+			}
+
+			fmt.Printf("git push --set-upstream orgin %s\n", ztreamName)
+			if _, err := git.PushSetOrigin(ztreamName); err != nil {
+				log.Fatal("Failed to start handover!", "error", err)
+				return
+			}
+			log.Info("Created branch!", "ztream", zt.CurZtream.Name)
+		}
 	}
 
 	log.Info("Starting ztream...")
@@ -127,12 +148,14 @@ func Start() {
 }
 
 func Merge() {
-	if !isActiveZtream() {
-		return
+	ztState := global.GetStateKeeper().GetState()
+	if !ztState.HasActiveZtream() {
+		log.Fatal("No active ztream found")
 	}
 
-	ztState := global.GetStateKeeper().GetState()
-	_ = ztState
+	if !isOnZtreamBranch(ztState) {
+		log.Fatal("No active ztream found")
+	}
 
 	var stdout, stderr bytes.Buffer
 	cmd := exec.Command("gh", "pr", "create", "--title", ztState.CurZtream.Name, "--body", ztState.CurZtream.Metadata)
@@ -149,27 +172,23 @@ func Merge() {
 	}
 }
 
-func isActiveZtream() bool {
+func isOnZtreamBranch(zt domain.ZtState) error {
 	branch, err := git.CurrentBranch()
 	if err != nil {
-		log.Error("Unable to get current branch", "error", err)
-		return false
+		return fmt.Errorf("failed to get branch - %w", err)
 	}
-	ztream := global.GetStateKeeper().GetState().CurZtream
-	if ztream == nil {
-		log.Error("No active ztream. Join or create a ztream before starting")
-		return false
-	} else if ztream.Name != branch {
-		log.Error("Join the ztream before starting.", "branch", branch, "active_ztream", ztream.Name)
-		return false
+
+	if !zt.HasActiveZtream() {
+		return errors.New("no active ztream found")
+	} else if zt.CurZtream.Name != branch {
+		return errors.New("not on ztream branch")
 	}
 
 	if branch == "master" || branch == "main" {
-		log.Error("Cannot start a ztream on main/master!")
-		return false
+		return errors.New("on main/master branch")
 	}
 
-	return true
+	return nil
 }
 
 func PrintCurrentZtream() {

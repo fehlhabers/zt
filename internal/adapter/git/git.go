@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/charmbracelet/log"
 )
 
 func Stash() (stdout string, err error) {
@@ -66,7 +68,7 @@ func runCommand(arguments ...string) (stdout string, err error) {
 	cmd.Stdout = &stdoutBuf
 	err = cmd.Run()
 	if err != nil {
-		fmt.Println(stderr.String())
+		log.Error(stderr.String())
 		return
 	}
 
